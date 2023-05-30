@@ -58,7 +58,7 @@ using var logger = new LoggerConfiguration()
     .CreateLogger();
 
 var builder = new ContainerBuilder();
-return Parser.Default.ParseArguments<CsvCommandLineOptions>(args)
+return Parser.Default.ParseArguments<JsonCommandLineOptions>(args)
     .MapResult(
         csvOptions => ValidateCommandLineOptions(csvOptions) ? Run(builder, new MainModule(logger, csvOptions)) : CommandLineOptionsNotValid,
         _ => CommandLineOptionsNotValid);
