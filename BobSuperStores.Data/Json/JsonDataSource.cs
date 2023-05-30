@@ -29,9 +29,10 @@
 
 #endregion
 
-namespace BobSuperStores.Data.Csv;
+namespace BobSuperStores.Data.Json;
 
 using System.Globalization;
+using System.Text.Json;
 using BobSuperStores.Data.Logging;
 
 using CsvHelper;
@@ -39,20 +40,21 @@ using CsvHelper.Configuration;
 
 using JetBrains.Annotations;
 
+
 /// <summary>
-/// The data source implementation that loads the data from a CSV file.
+/// The data source implementation that loads the data from a json file.
 /// </summary>
 /// <typeparam name="T">The type that can be loaded by the data source.</typeparam>
-public class CsvDataSource<T> : IDataSource<T>
+public class JsonDataSource<T> : IDataSource<T>
 {
     #region Constructors and Destructors
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="CsvDataSource{T}"/> class.
+    /// Initializes a new instance of the <see cref="JsonDataSource{T}"/> class.
     /// </summary>
     /// <param name="options">The options that were provided from the command line.</param>
     /// <param name="logger">The logger.</param>
-    public CsvDataSource([NotNull] CsvCommandLineOptions options, [NotNull] IOptanoLogger logger)
+    public JsonDataSource([NotNull] JsonCommandLineOptions options, [NotNull] IOptanoLogger logger)
     {
         this.Options = options ?? throw new ArgumentNullException(nameof(options));
         this.Logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -63,7 +65,7 @@ public class CsvDataSource<T> : IDataSource<T>
     #region Properties
 
     [NotNull]
-    private CsvCommandLineOptions Options { get; }
+    private JsonCommandLineOptions Options { get; }
 
     [NotNull]
     private IOptanoLogger Logger { get; }
@@ -81,24 +83,25 @@ public class CsvDataSource<T> : IDataSource<T>
             Delimiter = ";",
         };
 
-        var csvPath = Path.Combine(this.Options.SourceFileDirectory, $"{typeof(T).Name}.csv");
-        this.Logger.Log(LogLevel.Information, "Loading {0} from CSV source {1}...", typeof(T).Name, csvPath);
-        using var reader = new StreamReader(csvPath);
+        var jsonPath = Path.Combine(this.Options.SourceFileDirectory, $"{typeof(T).Name}.json");
+        this.Logger.Log(LogLevel.Information, "Loading {0} from JSON source {1}...", typeof(T).Name, jsonPath);
+        using var reader = new StreamReader(jsonPath);
 
 
-        using (CsvReader csv = new CsvReader(reader, config))
+        try
         {
-            try
-            {
-                return csv.GetRecords<T>().ToList();
-            }
-            catch (CsvHelperException e)
-            {
-                throw new Exception(e.Message);
-
-            }
+            var jsonString = File.ReadAllText(jsonPath);
+            var records = JsonSerializer.Deserialize<List<T>>(jsonString);
+            return records;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error occurred while loading data from JSON file: {typeof(T).Name}.json" +
+                $" with context: {currentContext.ToString()}" +
+                $"\n{ex.Message}");
         }
     }
 
     #endregion
 }
+
