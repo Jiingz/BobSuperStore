@@ -32,7 +32,6 @@
 namespace BobSuperStores.Data.Csv;
 
 using System.Globalization;
-
 using BobSuperStores.Data.Logging;
 
 using CsvHelper;
@@ -77,16 +76,29 @@ public class CsvDataSource<T> : IDataSource<T>
     public IEnumerable<T> LoadData(DataContext currentContext)
     {
         var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-                         {
-                             HasHeaderRecord = true,
-                             Delimiter = ";",
-                         };
+        {
+            HasHeaderRecord = true,
+            Delimiter = ";",
+        };
 
         var csvPath = Path.Combine(this.Options.SourceFileDirectory, $"{typeof(T).Name}.csv");
         this.Logger.Log(LogLevel.Information, "Loading {0} from CSV source {1}...", typeof(T).Name, csvPath);
         using var reader = new StreamReader(csvPath);
-        using var csv = new CsvReader(reader, config);
-        return csv.GetRecords<T>().ToList();
+
+
+        using (CsvReader csv = new CsvReader(reader, config))
+        {
+            try
+            {
+
+                return csv.GetRecords<T>().ToList();
+            }
+            catch (CsvHelperException e)
+            {
+                throw new Exception(e.Message);
+
+            }
+        }
     }
 
     #endregion

@@ -62,6 +62,7 @@ return Parser.Default.ParseArguments<CsvCommandLineOptions>(args)
         csvOptions => ValidateCommandLineOptions(csvOptions) ? Run(builder, new MainModule(logger, csvOptions)) : CommandLineOptionsNotValid,
         _ => CommandLineOptionsNotValid);
 
+
 bool ValidateCommandLineOptions(IValidatableCommandLineOptions commandLineOptions)
 {
     logger.Information("Starting...");

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "BobSuperStores": {
+      "commandName": "Project",
+      "commandLineArgs": "-s import"
+    }
+  }
+}
